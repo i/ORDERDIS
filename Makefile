@@ -1,10 +1,13 @@
 CC=gcc
-CFLAGS=-pedantic -ansi -Wall -Werror
+HARDORE=-pedantic -ansi -Wall -Werror
 CFILES=./src/main.c
 
 
 all:
-		$(CC) $(CFILES) $(CFLAGS) -o order
+		$(CC) $(CFILES)  -o order
+
+HARDCORE:
+		$(CC) $(CFILES) $(HARDCORE) -o order
 
 debug:
 		$(CC) -g $(CFILES)  $(CFLAGS) -o order

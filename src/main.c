@@ -1,21 +1,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "list.h"
+#include "order.h"
+#include "customer.h"
+
+
 int main(int argc, char **argv) {
-  FILE *db;
-  char name[200];
+  customer *ian;
 
-  /* debug only */
-  if (argc != 2) {
-    printf("Icorrect input\n");
-    exit(1);
-  }
+  ian = new_customer(1, "ian", 450.0, "426 rosemont ringoes rd", "new jersey", "08559");
+  add_customer(ian);
 
-  db = fopen("./database.txt", "r");
-  fscanf(db, "%[^|]", name);
-  printf("%s\n", name);
+  LL_PREPEND(ian->orders,  new_order(5, "the land before time", 5.5));
 
-  fclose(db);
+
+  remove_customer(ian);
+  free(ian);
 
   return 0;
 }
+
