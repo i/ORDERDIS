@@ -51,6 +51,15 @@ void add_customer(customer *c) {
   HASH_ADD_INT( customers, id, c );  /* id: name of key field */
 }
 
+/* Get customer from hashtable */
+/* s can be null on failure */
+customer *find_customer(int cust_id) {
+  customer *s;
+
+  HASH_FIND_INT( customers, &cust_id, s);
+  return s;
+}
+
 /* Remove customer from hashtable */
 void remove_customer(customer *c) {
   HASH_DEL( customers, c);

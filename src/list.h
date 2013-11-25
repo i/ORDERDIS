@@ -9,5 +9,10 @@ typedef struct lnode_ {
   struct lnode_ *prev;
 } lnode;
 
+lnode *new_lnode(void *val){
+  lnode *n = malloc(sizeof(lnode));
+  n->val = val;
+  return n;
+}
 
 #endif
