@@ -11,14 +11,16 @@ void *worker(void *queue) {
   customer *c;
   order *o;
   int err;
+  category *q = (category*)queue;
 
-  /*  pthread_detach(pthread_self());*/
+/*  pthread_detach(pthread_self());*/
   while(1) {
-    pthread_mutex_lock(&((category*)queue)->lock);
+    pthread_mutex_trylock( &(q->lock) );          // LOCK QUEUE
+
     /* check to see if queue is empty and producer is done producing */
-    if (((category*)queue)->next != NULL && ((category*)queue)->producing == 1) {
+    if ( q->next != NULL && q->producing) {
       /* if queue not empty, get first item, remove from queue */
-      o = dequeue(((category*)queue)->cat);
+      o = dequeue(q->cat);
 
       /* get customer from database using find_customer */
       c = find_customer(o->customer_id);
@@ -29,31 +31,35 @@ void *worker(void *queue) {
         continue;
       }
 
+
+      pthread_mutex_lock(&(c->lock));         // LOCK CUSTOMER
+
       /* check customer balance */
-      pthread_mutex_lock(&(c->lock));
+
       if (c->balance >= o->price) { /* if balance is > transaction amount */
         c->balance -= o->price;     /* remove amount from customer balance */
-        o->success = SUCCESS;
-        o->remaining_balance = c->balance;
-      } else {                      /* else if balance < transaction amount */
-        o->success = FAILURE;
+        o->success = SUCCESS;       /* set order status to successful */
+        o->remaining_balance = c->balance; /* show customer's balance on order */
+      } else {
+        o->success = FAILURE;       /* set order status to failure if order doesn't succeed */
       }
       add_order(c, o);              /* add order to customer's proper order list */
-      err = pthread_mutex_unlock(&(c->lock));
+
+      err = pthread_mutex_unlock(&(c->lock)); // UNLOCK CUSTOMER
       printf("C: %d\n", err);
-      err = pthread_mutex_unlock(&((category*)queue)->lock);
+      err = pthread_mutex_unlock(&(q->lock)); // UNLOCK QUEUE
       printf("Q: %d\n", err);
     }
-    else if (((category*)queue)->producing == 0) {
-      printf("Done consuming in %s\n", ((category*)queue)->cat);
-      pthread_mutex_unlock(&((category*)queue)->lock);
+    else if (q->producing == 0) {
+      printf("Done consuming in %s\n", q->cat);
+      pthread_mutex_unlock(&(q->lock));
       pthread_exit(0);
     }
     else {
-      /* pthread_cond_wait( */
-      printf("Waiting waiting for signal in %s\n", ((category*)queue)->cat);
-      pthread_cond_wait(&(((category*)queue)->waiter), &(((category*)queue)->lock));
-      printf("Got signal in %s, int is: %d\n", ((category*)queue)->cat, ((category*)queue)->producing);
+      /* pthread_cond_wait */
+      printf("Waiting for signal in %s\n", q->cat);
+      pthread_cond_wait(&(q->waiter), &(q->lock)); // WAITS, BLOCKS
+      printf("Got signal in %s, int is: %d\n", q->cat, q->producing);
     }
   }
   return NULL;
