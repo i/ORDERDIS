@@ -13,12 +13,13 @@ void *worker(void *queue) {
   int err;
   category *q = (category*)queue;
 
-/*  pthread_detach(pthread_self());*/
   while(1) {
-    pthread_mutex_trylock( &(q->lock) );          // LOCK QUEUE
+    printf("Get Lock: %s\n", q->cat);
+    pthread_mutex_lock(&q->lock);
+    printf("Got Lock: %s\n", q->cat);
 
     /* check to see if queue is empty and producer is done producing */
-    if ( q->next != NULL && q->producing) {
+    if (q->next != NULL) {
       /* if queue not empty, get first item, remove from queue */
       o = dequeue(q->cat);
 
@@ -30,7 +31,6 @@ void *worker(void *queue) {
         fprintf(stderr, "invalid customer id %d\n", o->customer_id);
         continue;
       }
-
 
       pthread_mutex_lock(&(c->lock));         // LOCK CUSTOMER
 
@@ -46,20 +46,19 @@ void *worker(void *queue) {
       add_order(c, o);              /* add order to customer's proper order list */
 
       err = pthread_mutex_unlock(&(c->lock)); // UNLOCK CUSTOMER
-      printf("C: %d\n", err);
-      err = pthread_mutex_unlock(&(q->lock)); // UNLOCK QUEUE
-      printf("Q: %d\n", err);
+      pthread_mutex_unlock(&q->lock);
     }
-    else if (q->producing == 0) {
-      printf("Done consuming in %s\n", q->cat);
-      pthread_mutex_unlock(&(q->lock));
-      pthread_exit(0);
-    }
-    else {
+    else if (q->producing) {
       /* pthread_cond_wait */
       printf("Waiting for signal in %s\n", q->cat);
       pthread_cond_wait(&(q->waiter), &(q->lock)); // WAITS, BLOCKS
       printf("Got signal in %s, int is: %d\n", q->cat, q->producing);
+      pthread_mutex_unlock(&(q->lock));
+    }
+    else {
+      printf("Done consuming in %s\n", q->cat);
+      pthread_mutex_unlock(&q->lock);
+      pthread_exit(0);
     }
   }
   return NULL;
@@ -119,8 +118,6 @@ int main(int argc, char **argv) {
 
     enqueue(q, new_category(o->category, o));
   }
-
-  sleep(5);
 
   for(q = queues; q != NULL; q = q->hh.next) {
     /* say hey i am done reading orders in */
