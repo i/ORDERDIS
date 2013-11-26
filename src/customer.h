@@ -21,6 +21,7 @@ typedef struct {
   order *successful_orders;
   order *failed_orders;
 
+  pthread_mutex_t lock;
   UT_hash_handle hh;  /* makes this structure hashable */
 } customer;
 

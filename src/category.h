@@ -9,6 +9,7 @@ typedef struct category_{
   void *val;
   struct category_ *next;
   struct category_ *prev;
+
   UT_hash_handle hh;  /* makes this structure hashable */
 } category;
 

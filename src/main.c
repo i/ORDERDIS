@@ -6,17 +6,15 @@
 #include "customer.h"
 #include "category.h"
 
-float total, subtotal;
 
 void *worker(void *queue) {
-  return NULL;
   customer *c;
   order *o;
+
   /* check to see if queue is empty */
   while (((category*)queue)->next != NULL) {
     /* if queue not empty, get first item, remove from queue */
     o = dequeue(((category*)queue)->cat);
-    printf("%s\n", o->title);
 
     /* get customer from database using find_customer */
     c = find_customer(o->customer_id);
@@ -28,6 +26,7 @@ void *worker(void *queue) {
     }
 
     /* check customer balance */
+    pthread_mutex_lock(&(c->lock));
     if (c->balance >= o->price) { /* if balance is > transaction amount */
       c->balance -= o->price;     /* remove amount from customer balance */
       o->success = SUCCESS;
@@ -36,6 +35,7 @@ void *worker(void *queue) {
       o->success = FAILURE;
     }
     add_order(c, o);              /* add order to customer's proper order list */
+    pthread_mutex_unlock(&(c->lock));
   }
   return NULL;
 }
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     strcpy(c->address, strtok(NULL, "|"));   /* Assign address */
     strcpy(c->state, strtok(NULL, "|"));     /* Assign state */
     strcpy(c->zip, strtok(NULL, "|"));       /* Assign zipcode */
-
+    pthread_mutex_init(&c->lock, NULL);      /* Initializes the lock */
     add_customer(c);
   }
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 
   while (fgets(line, 300, f)) {
     o = malloc(sizeof(order));
-    strcpy(o->title, strtok(line, "\""));
+    strcpy(o->title, strtok(line, "\""));       /* Assign title */
     o->price = atof(strtok(NULL, "|"));
     o->customer_id = atoi(strtok(NULL, "|"));
     strcpy(o->category, strtok(NULL, " \r\n"));
@@ -92,13 +92,19 @@ int main(int argc, char **argv) {
       add_queue(q);
     }
 
-
     enqueue(q, new_category(o->category, o));
   }
 
+  for(q = queues; q != NULL; q = q->hh.next) {
+    /* say hey i am done reading orders in */
+    /* pthread_cond_signal(q->conditioanl) */
+  }
+
+  for(q = queues; q != NULL; q = q->hh.next) {
+    pthread_join(*(pthread_t*)q->val, NULL);
+  }
 
   print_summary(c);
-
 
   return 0;
 }
