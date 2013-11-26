@@ -12,10 +12,10 @@ enum order_types { FAILURE, SUCCESS, PENDING };
 
 /* Order struct */
 typedef struct {
-  char title[30];
+  char title[300];
   float price;
   int customer_id;
-  char category[30];
+  char category[50];  /* hash key for queues */
   int success;        /* 1: successful, -1: failed, 0: pending */
 
 } order;

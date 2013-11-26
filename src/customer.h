@@ -43,7 +43,7 @@ customer *new_customer(int id, char *name, float balance,
 
 /* Add order to customer's list of orders */
 void add_order(customer *c, order *o) {
-
+  //TODO
 }
 
 /* Add customer to hashtable */

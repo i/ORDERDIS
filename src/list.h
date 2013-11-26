@@ -15,4 +15,5 @@ lnode *new_lnode(void *val){
   return n;
 }
 
+
 #endif

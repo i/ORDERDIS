@@ -1,63 +1,64 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "list.h"
 #include "order.h"
 #include "customer.h"
+#include "category.h"
 
 
-/*int main(int argc, char **argv) {*/
-/*  customer *ian;*/
-/*  order *order;*/
-/*  lnode *temp_node;*/
-/**/
-/*  ian = new_customer(1, "ian", 450.0, "426 rosemont ringoes rd", "new jersey", "08559");*/
-/*  add_customer(ian);                                 /* add ian to hashtable */*/
-/*  order = new_order(5, "the land before time", 5.5); /* Create new order object */*/
-/*  LL_PREPEND(ian->orders,  new_lnode(order));        /* Add order to the list of Ian's orders */*/
-/**/
-/*  remove_customer(ian);*/
-/*  free(ian);*/
-/**/
-/*  return 0;*/
-/*}*/
-/**/
+int main(int argc, char **argv) {
+  customer *c;
+  category *q;
+  order *o;
+  lnode *n;
+  FILE *f;
+  char line[300];
 
+  /* add_queue(new_category("yo", NULL));
+  * q = find_queue("yo");
+  * o = malloc(sizeof(order));
+  * strcpy(o->title, "Yest");
+  * enqueue(q, new_category("yo", o));
+  * printf("%s\n", dequeue("yo")->title);
+  */
 
-int main() {
+  f = fopen("./data/database.txt", "r");
 
-  read customer database;  database.txt
+  /* Add customers to database */
+  while (fgets(line, 300, f)) {
+    c = malloc(sizeof(customer));
+    strcpy(c->name, strtok(line, "\""));     /* Assign name */
+    c->id = atoi(strtok(NULL, "|"));         /* Assign ID */
+    c->balance = atof(strtok(NULL, "|"));    /* Assign balance */
+    strcpy(c->address, strtok(NULL, "|"));   /* Assign address */
+    strcpy(c->state, strtok(NULL, "|"));     /* Assign state */
+    strcpy(c->zip, strtok(NULL, "|"));       /* Assign zipcode */
 
-  store all the customers in hash table;
-
-  read all categories from categories.txt;
-  for each category
-    create a new queue category; // a queue contains a list of orders that need to be processed
-    create a thread for category; // thread will be responsible for processing orders from queue
-
-  read in the orders.txt
-  for each order:
-    place order in proper queue;
-
-
-  After main has read all orders and place them in queues
-  main will pthread_join each thread;
-  Write out database to finalreport
-}
-
-*order.customer_id === order->customer_id => true
-
-void worker_thread() {
-  if (can get order item from Q) {
-    order = Q.pop
-    customer = find_customer(order.customer_id); /* get customer from hash table */
-    if customer can afford book {
-      decrement customer balance
-      add order to customer.successful_orders
-    } else {
-      order status is unsuccessful
-      add order to customer.unsuccessful_orders
-    }
+    add_customer(c);
   }
 
+  fclose(f);                                /* Close database.txt */
+
+  f = fopen("./data/orders.txt", "r");
+
+  while (fgets(line, 300, f)) {
+    o = malloc(sizeof(order));
+    strcpy(o->title, strtok(line, "\""));
+    o->price = atof(strtok(NULL, "|"));
+    o->customer_id = atoi(strtok(NULL, "|"));
+    strcpy(o->category, strtok(NULL, " \n"));
+    o->success = PENDING;
+
+    /* If it's a new category, add new dummy node queue to hashtable */
+    if (!(q = find_queue(o->category))) {
+      q = new_category(o->category, NULL);
+      add_queue(q);
+    }
+
+    enqueue(q, new_category(o->category, o));
+    printf("%s\n", dequeue(o->category)->title);
+  }
+
+
+  return 0;
 }
