@@ -118,6 +118,7 @@ int main(int argc, char **argv) {
 
   /* Send wakeup call to queues */
   for(q = queues; q != NULL; q = q->hh.next) {
+    printf("waking up %s\n", q->cat);
     pthread_mutex_lock(&q->lock);
     q->producing = 0;
     pthread_cond_signal(&q->waiter);
@@ -128,7 +129,9 @@ int main(int argc, char **argv) {
     pthread_join(*(pthread_t*)q->val, NULL);
   }
 
-  print_summary(c);
+/*  print_summary(c);*/
+
+  destroy_db();
 
   return 0;
 }

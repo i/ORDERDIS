@@ -1,5 +1,5 @@
 CC=gcc
-HARDORE=-pedantic -ansi -Wall -Werror -pthread
+HARDORE=-pthread -pedantic -ansi -Wall -Werror -pthread
 CFILES=./src/main.c
 
 

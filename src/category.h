@@ -5,7 +5,7 @@
 #include "uthash.h"
 
 typedef struct category_{
-  char *cat;
+  char cat[20];
   void *val;
   struct category_ *next;
   struct category_ *prev;
@@ -20,7 +20,7 @@ typedef struct category_{
 category *new_category (char *cat, void *val) {
   category *q = malloc(sizeof(category));
 
-  q->cat = strdup(cat);
+  strcat(q->cat, cat);
   q->val = val;
   q->prev = NULL;
   q->next = NULL;

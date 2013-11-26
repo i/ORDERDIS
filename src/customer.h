@@ -8,6 +8,7 @@
 #include "order.h"
 #include "uthash.h"
 #include "utlist.h"
+#include "category.h"
 
 
 /* Customer struct */
@@ -40,6 +41,7 @@ customer *new_customer(int id, char *name, float balance,
   strcpy(c->zip, zip);         /* Zipcode */
   c->successful_orders = NULL;
   c->failed_orders = NULL;
+  pthread_mutex_init(&c->lock, NULL);
 
   return c;
 }
@@ -119,5 +121,39 @@ void print_summary(customer *c) {
 }
 
 
+void destroy_db() {
+  customer *c, *d;
+  order *o, *p;
+  category *q, *r;
+
+  /* Destroy all CUSTOMERS and their ORDERS */
+  c = customers;
+  while(c != NULL) {
+    o = c->successful_orders;
+    while (o != NULL) {
+      p = o->next;
+      free(o);
+      o = p;
+    }
+    o = c->failed_orders;
+    while (o != NULL) {
+      p = o->next;
+      free(o);
+      o = p;
+    }
+    d = c;
+    c = c->hh.next;
+    free(d);
+  }
+
+  /* Destroy all queues */
+  q = queues;
+  while (q != NULL) {
+    r = q;
+    q = q->hh.next;
+    free(r);
+  }
+
+}
 
 #endif
