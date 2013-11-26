@@ -10,6 +10,9 @@ typedef struct category_{
   struct category_ *next;
   struct category_ *prev;
 
+  int producing;
+  pthread_mutex_t lock;
+  pthread_cond_t waiter;
   UT_hash_handle hh;  /* makes this structure hashable */
 } category;
 
@@ -29,6 +32,9 @@ category *queues = NULL;
 
 /* Add category to hashtable */
 void add_queue(category *q) {
+  q->producing = 1;
+  pthread_mutex_init(&q->lock, NULL);
+  pthread_cond_init(&q->waiter, NULL);
   HASH_ADD_KEYPTR(hh, queues, q->cat, strlen(q->cat), q);  /* name: name of key field */
 }
 
@@ -43,6 +49,7 @@ category *find_queue(char *name) {
 
 void enqueue(category *head, category *add) {
   LL_APPEND(head, add);
+  pthread_cond_signal(&(head->waiter));
 }
 
 

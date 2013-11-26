@@ -11,31 +11,41 @@ void *worker(void *queue) {
   customer *c;
   order *o;
 
-  /* check to see if queue is empty */
-  while (((category*)queue)->next != NULL) {
-    /* if queue not empty, get first item, remove from queue */
-    o = dequeue(((category*)queue)->cat);
+/*  pthread_detach(pthread_self());*/
+  while(1) {
+    pthread_mutex_lock(&((category*)queue)->lock);
+    /* check to see if queue is empty and producer is done producing */
+    if (((category*)queue)->next != NULL && ((category*)queue)->producing != 0) {
+      /* if queue not empty, get first item, remove from queue */
+      o = dequeue(((category*)queue)->cat);
 
-    /* get customer from database using find_customer */
-    c = find_customer(o->customer_id);
+      /* get customer from database using find_customer */
+      c = find_customer(o->customer_id);
 
-    /* validate customer ID */
-    if (c == NULL) {
-      fprintf(stderr, "invalid customer id %d\n", o->customer_id);
-      continue;
+      /* validate customer ID */
+      if (c == NULL) {
+        fprintf(stderr, "invalid customer id %d\n", o->customer_id);
+        continue;
+      }
+
+      /* check customer balance */
+      pthread_mutex_lock(&(c->lock));
+      if (c->balance >= o->price) { /* if balance is > transaction amount */
+        c->balance -= o->price;     /* remove amount from customer balance */
+        o->success = SUCCESS;
+        o->remaining_balance = c->balance;
+      } else {                      /* else if balance < transaction amount */
+        o->success = FAILURE;
+      }
+      add_order(c, o);              /* add order to customer's proper order list */
+      pthread_mutex_unlock(&(c->lock));
+      pthread_mutex_unlock(&(((category*)queue)->lock));
+    } else if (!((category*)queue)->producing) {
+      pthread_exit(0);
+    } else {
+      /* pthread_cond_wait( */
+      pthread_cond_wait(&(((category*)queue)->waiter), &(((category*)queue)->lock));
     }
-
-    /* check customer balance */
-    pthread_mutex_lock(&(c->lock));
-    if (c->balance >= o->price) { /* if balance is > transaction amount */
-      c->balance -= o->price;     /* remove amount from customer balance */
-      o->success = SUCCESS;
-      o->remaining_balance = c->balance;
-    } else {                      /* else if balance < transaction amount */
-      o->success = FAILURE;
-    }
-    add_order(c, o);              /* add order to customer's proper order list */
-    pthread_mutex_unlock(&(c->lock));
   }
   return NULL;
 }
@@ -97,7 +107,9 @@ int main(int argc, char **argv) {
 
   for(q = queues; q != NULL; q = q->hh.next) {
     /* say hey i am done reading orders in */
+    q->producing = 0;
     /* pthread_cond_signal(q->conditioanl) */
+    pthread_cond_signal(&(q->waiter));
   }
 
   for(q = queues; q != NULL; q = q->hh.next) {
