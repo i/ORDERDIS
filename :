@@ -13,7 +13,6 @@ void *worker(void *queue) {
   while (((category*)queue)->next != NULL) {
     /* if queue not empty, get first item, remove from queue */
     o = dequeue(((category*)queue)->cat);
-    printf("%s\n", o->title);
 
     /* get customer from database using find_customer */
     c = find_customer(o->customer_id);
@@ -33,7 +32,6 @@ void *worker(void *queue) {
     }
     add_order(c, o);              /* add order to customer's proper order list */
   }
-  return NULL;
 }
 
 int main(int argc, char **argv) {
@@ -87,13 +85,12 @@ int main(int argc, char **argv) {
       add_queue(q);
     }
 
-    q = find_queue("HOUSING01");
-
-    pthread_join((pthread_t)q->val, NULL);
-
     enqueue(q, new_category(o->category, o));
   }
 
+  for(q = queues; q != NULL; q = q->hh.next) {
+    pthread_join((pthread_t)q->val, NULL);
+  }
 
   return 0;
 }

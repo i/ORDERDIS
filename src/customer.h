@@ -18,7 +18,8 @@ typedef struct {
   char address[20];
   char state[20];
   char zip[10];
-  lnode *orders;
+  lnode *successful_orders;
+  lnode *failed_orders;
 
   UT_hash_handle hh;  /* makes this structure hashable */
 } customer;
@@ -36,7 +37,8 @@ customer *new_customer(int id, char *name, float balance,
   strcpy(c->address, address); /* Address */
   strcpy(c->state, state);     /* State */
   strcpy(c->zip, zip);         /* Zipcode */
-  c->orders = NULL;
+  c->successful_orders = NULL;
+  c->failed_orders = NULL;
 
   return c;
 }

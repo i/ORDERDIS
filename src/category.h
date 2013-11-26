@@ -51,7 +51,7 @@ order *dequeue(char *category_name) {
   category *q = find_queue(category_name);
 
   /* Sanity checks */
-  if (q != NULL && q->val == NULL) {
+  if (q != NULL) {
     if(q->next != NULL && q->next->val != NULL) {
       o = (order *)q->next->val;
       LL_DELETE(q, q->next);
@@ -59,6 +59,7 @@ order *dequeue(char *category_name) {
     }
     else {
       printf("Found queue, but nothing in it.\n");
+      return NULL;
     }
   } else {
     fprintf(stderr, "Couldn't find queue\n", category_name);

@@ -1,16 +1,16 @@
 CC=gcc
-HARDORE=-pedantic -ansi -Wall -Werror
+HARDORE=-pedantic -ansi -Wall -Werror -pthread
 CFILES=./src/main.c
 
 
 all:
-		$(CC) $(CFILES)  -o order
+		$(CC) -pthread $(CFILES)  -o order
 
 HARDCORE:
 		$(CC) $(CFILES) $(HARDCORE) -o order
 
 debug:
-		$(CC) -g $(CFILES)  $(CFLAGS) -o order
+		$(CC) -g -pthread $(CFILES)  $(CFLAGS) -o order
 
 clean:
 		rm order
