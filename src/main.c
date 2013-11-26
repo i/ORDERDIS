@@ -10,12 +10,13 @@
 void *worker(void *queue) {
   customer *c;
   order *o;
+  int err;
 
-/*  pthread_detach(pthread_self());*/
+  /*  pthread_detach(pthread_self());*/
   while(1) {
     pthread_mutex_lock(&((category*)queue)->lock);
     /* check to see if queue is empty and producer is done producing */
-    if (((category*)queue)->next != NULL && ((category*)queue)->producing != 0) {
+    if (((category*)queue)->next != NULL && ((category*)queue)->producing == 1) {
       /* if queue not empty, get first item, remove from queue */
       o = dequeue(((category*)queue)->cat);
 
@@ -38,13 +39,21 @@ void *worker(void *queue) {
         o->success = FAILURE;
       }
       add_order(c, o);              /* add order to customer's proper order list */
-      pthread_mutex_unlock(&(c->lock));
-      pthread_mutex_unlock(&(((category*)queue)->lock));
-    } else if (!((category*)queue)->producing) {
+      err = pthread_mutex_unlock(&(c->lock));
+      printf("C: %d\n", err);
+      err = pthread_mutex_unlock(&((category*)queue)->lock);
+      printf("Q: %d\n", err);
+    }
+    else if (((category*)queue)->producing == 0) {
+      printf("Done consuming in %s\n", ((category*)queue)->cat);
+      pthread_mutex_unlock(&((category*)queue)->lock);
       pthread_exit(0);
-    } else {
+    }
+    else {
       /* pthread_cond_wait( */
+      printf("Waiting waiting for signal in %s\n", ((category*)queue)->cat);
       pthread_cond_wait(&(((category*)queue)->waiter), &(((category*)queue)->lock));
+      printf("Got signal in %s, int is: %d\n", ((category*)queue)->cat, ((category*)queue)->producing);
     }
   }
   return NULL;
@@ -105,11 +114,16 @@ int main(int argc, char **argv) {
     enqueue(q, new_category(o->category, o));
   }
 
+  sleep(5);
+
   for(q = queues; q != NULL; q = q->hh.next) {
     /* say hey i am done reading orders in */
+    pthread_mutex_lock(&q->lock);
     q->producing = 0;
+    pthread_cond_signal(&q->waiter);
+    pthread_mutex_unlock(&q->lock);
     /* pthread_cond_signal(q->conditioanl) */
-    pthread_cond_signal(&(q->waiter));
+    printf("Sending wakeup call to %s\n", q->cat);
   }
 
   for(q = queues; q != NULL; q = q->hh.next) {

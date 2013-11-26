@@ -48,8 +48,10 @@ category *find_queue(char *name) {
 }
 
 void enqueue(category *head, category *add) {
+  pthread_mutex_lock(&head->lock);
   LL_APPEND(head, add);
-  pthread_cond_signal(&(head->waiter));
+  pthread_mutex_unlock(&head->lock);
+/*  pthread_cond_signal(&head->waiter);*/
 }
 
 
