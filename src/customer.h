@@ -18,8 +18,8 @@ typedef struct {
   char address[20];
   char state[20];
   char zip[10];
-  lnode *successful_orders;
-  lnode *failed_orders;
+  order *successful_orders;
+  order *failed_orders;
 
   UT_hash_handle hh;  /* makes this structure hashable */
 } customer;
@@ -45,7 +45,28 @@ customer *new_customer(int id, char *name, float balance,
 
 /* Add order to customer's list of orders */
 void add_order(customer *c, order *o) {
-  //TODO
+  if (o->success == SUCCESS) {
+    if (c->successful_orders == NULL) {
+      c->successful_orders = o;
+      o->next = NULL;
+    }
+    else {
+      o->next = c->successful_orders;
+      c->successful_orders = o;
+    }
+  }
+  else if (o->success == FAILURE) {
+    if (c->failed_orders == NULL) {
+      c->failed_orders = o;
+      o->next = NULL;
+    }
+    else {
+      o->next = c->failed_orders;
+      c->failed_orders = o;
+    }
+  } else {
+    fprintf(stderr, "tried adding incomplete order to %s's order list\n", c->name);
+  }
 }
 
 /* Add customer to hashtable */
@@ -66,4 +87,36 @@ customer *find_customer(int cust_id) {
 void remove_customer(customer *c) {
   HASH_DEL( customers, c);
 }
+
+
+void print_summary(customer *c) {
+  order *o;
+  float subtotal, total = 0;;
+
+  /* Print out order summary for each user */
+  for(c = customers; c != NULL; c = c->hh.next) {
+    subtotal = 0;
+    printf("=== BEGIN CUSTOMER INFO ===\n");
+    printf("### BALANCE ###\n");
+    printf("Customer name: %s\n", c->name);
+    printf("Customer ID number: %d\n", c->id);
+    printf("Remaining credit balance after all purchases (a dollar amount): $%'.2f\n", c->balance);
+    printf("### SUCCESSFUL ORDERS ###\n");
+    for (o = c->successful_orders; o != NULL; o = o->next) {
+      printf("\"%s\"| %'.2f| %'.2f\n", o->title, o->price, o->remaining_balance);
+      subtotal += o->price;
+    }
+    printf("Total amount spent by customer: $%'.2f\n", subtotal);
+    total += subtotal;
+    printf("### REJECTED ORDERS ###\n");
+    for (o = c->failed_orders; o != NULL; o = o->next) {
+      printf("\"%s\"| %'.2f\n", o->title, o->price);
+    }
+    printf("### END CUSTOMER INFO ###\n");
+  }
+  printf("Total amount spent by all customer: $%'.2f\n", total);
+}
+
+
+
 #endif

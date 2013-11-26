@@ -6,7 +6,10 @@
 #include "customer.h"
 #include "category.h"
 
+float total, subtotal;
+
 void *worker(void *queue) {
+  return NULL;
   customer *c;
   order *o;
   /* check to see if queue is empty */
@@ -28,6 +31,7 @@ void *worker(void *queue) {
     if (c->balance >= o->price) { /* if balance is > transaction amount */
       c->balance -= o->price;     /* remove amount from customer balance */
       o->success = SUCCESS;
+      o->remaining_balance = c->balance;
     } else {                      /* else if balance < transaction amount */
       o->success = FAILURE;
     }
@@ -76,6 +80,7 @@ int main(int argc, char **argv) {
 
     /* If it's a new category, add new dummy node queue to hashtable */
     if (!(q = find_queue(o->category))) {
+
       q = new_category(o->category, NULL);
       tid = malloc(sizeof(pthread_t));
       err = pthread_create(tid, NULL, &worker, q);
@@ -87,12 +92,12 @@ int main(int argc, char **argv) {
       add_queue(q);
     }
 
-    q = find_queue("HOUSING01");
-
-    pthread_join((pthread_t)q->val, NULL);
 
     enqueue(q, new_category(o->category, o));
   }
+
+
+  print_summary(c);
 
 
   return 0;
