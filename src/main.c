@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "list.h"
 #include "order.h"
 #include "customer.h"
 #include "category.h"
@@ -65,7 +64,6 @@ int main(int argc, char **argv) {
   customer *c;
   category *q;
   order *o;
-  lnode *n;
   FILE *f;
   char line[300];
   int err;
@@ -118,7 +116,6 @@ int main(int argc, char **argv) {
 
   /* Send wakeup call to queues */
   for(q = queues; q != NULL; q = q->hh.next) {
-    printf("waking up %s\n", q->cat);
     pthread_mutex_lock(&q->lock);
     q->producing = 0;
     pthread_cond_signal(&q->waiter);

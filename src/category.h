@@ -58,13 +58,15 @@ void enqueue(category *head, category *add) {
 /* Gets an order object and deletes it from front of queue */
 order *dequeue(char *category_name) {
   order *o;
-  category *q = find_queue(category_name);
+  category *r, *q = find_queue(category_name);
 
   /* Sanity checks */
   if (q != NULL) {
     if(q->next != NULL && q->next->val != NULL) {
       o = (order *)q->next->val;
+      r = (q->next);
       LL_DELETE(q, q->next);
+      free(r);
       return o;
     }
     else {

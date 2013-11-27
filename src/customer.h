@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "list.h"
 #include "order.h"
 #include "uthash.h"
 #include "utlist.h"
@@ -141,6 +140,7 @@ void destroy_db() {
       free(o);
       o = p;
     }
+    HASH_DEL(customers, c);
     d = c;
     c = c->hh.next;
     free(d);
@@ -149,7 +149,9 @@ void destroy_db() {
   /* Destroy all queues */
   q = queues;
   while (q != NULL) {
+    HASH_DEL(queues, q);
     r = q;
+    free(q->val);
     q = q->hh.next;
     free(r);
   }
