@@ -113,6 +113,7 @@ int main(int argc, char **argv) {
 
     enqueue(q, new_category(o->category, o));
   }
+  fclose(f);
 
   /* Send wakeup call to queues */
   for(q = queues; q != NULL; q = q->hh.next) {
