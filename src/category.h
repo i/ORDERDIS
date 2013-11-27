@@ -5,7 +5,7 @@
 #include "uthash.h"
 
 typedef struct category_{
-  char cat[20];
+  char cat[50];
   void *val;
   struct category_ *next;
   struct category_ *prev;
@@ -51,7 +51,7 @@ void enqueue(category *head, category *add) {
   pthread_mutex_lock(&(head->lock));
   LL_APPEND(head, add);
   pthread_mutex_unlock(&(head->lock));
-/*  pthread_cond_signal(&head->waiter);*/
+  /*  pthread_cond_signal(&head->waiter); */
 }
 
 

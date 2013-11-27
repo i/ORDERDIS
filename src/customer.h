@@ -28,23 +28,6 @@ typedef struct {
 /* Global hashtable for customers */
 customer *customers = NULL;
 
-customer *new_customer(int id, char *name, float balance,
-    char *address, char *state, char *zip) {
-
-  customer *c = malloc(sizeof(customer));
-  c->id = id;                  /* Id  */
-  strcpy(c->name, name);       /* Name */
-  c->balance = balance;        /* Balance */
-  strcpy(c->address, address); /* Address */
-  strcpy(c->state, state);     /* State */
-  strcpy(c->zip, zip);         /* Zipcode */
-  c->successful_orders = NULL;
-  c->failed_orders = NULL;
-  pthread_mutex_init(&c->lock, NULL);
-
-  return c;
-}
-
 /* Add order to customer's list of orders */
 void add_order(customer *c, order *o) {
   if (o->success == SUCCESS) {

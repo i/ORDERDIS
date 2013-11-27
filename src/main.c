@@ -16,7 +16,7 @@ void *worker(void *queue) {
     /* Get lock */
     pthread_mutex_lock(&q->lock);
 
-    /* check to see if queue is empty and producer is done producing */
+    /* check to see if queue is empty */ 
     if (q->next != NULL) {
       /* if queue not empty, get first item, remove from queue */
       o = dequeue(q->cat);
@@ -54,7 +54,7 @@ void *worker(void *queue) {
     else {
       /* Done consuming this queue */
       pthread_mutex_unlock(&q->lock);
-      pthread_exit(0);
+      return NULL;
     }
   }
   return NULL;
@@ -69,8 +69,17 @@ int main(int argc, char **argv) {
   int err;
   pthread_t *tid;
 
+  if (argc != 3) {
+    printf("Usage: ./order path/to/database path/to/orders\n");
+    exit(1);
+  }
 
-  f = fopen("./data/database.txt", "r");
+
+  f = fopen(argv[1], "r");
+  if (f == NULL) {
+    fprintf(stderr, "Customer file not found\n");
+    exit(1);
+  }
 
   /* Add customers to database */
   while (fgets(line, 300, f)) {
@@ -87,7 +96,11 @@ int main(int argc, char **argv) {
 
   fclose(f);                                /* Close database.txt */
 
-  f = fopen("./data/orders.txt", "r");
+  f = fopen(argv[2], "r");
+  if (f == NULL) {
+    fprintf(stderr, "Order file not found\n");
+    exit(1);
+  }
 
   while (fgets(line, 300, f)) {
     o = malloc(sizeof(order));
@@ -102,13 +115,13 @@ int main(int argc, char **argv) {
 
       q = new_category(o->category, NULL);
       tid = malloc(sizeof(pthread_t));
+      add_queue(q);
       err = pthread_create(tid, NULL, &worker, q);
       q->val = tid;
       if (err != 0) {
         fprintf(stderr, "Thread could not be created!\n");
         exit(1);
       }
-      add_queue(q);
     }
 
     enqueue(q, new_category(o->category, o));
@@ -127,7 +140,7 @@ int main(int argc, char **argv) {
     pthread_join(*(pthread_t*)q->val, NULL);
   }
 
-/*  print_summary(c);*/
+  print_summary(c);
 
   destroy_db();
 
